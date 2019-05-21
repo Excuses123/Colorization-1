@@ -1,17 +1,18 @@
 # -*-coding:utf-8-*-
+
+# -*-coding:utf-8-*-
 """
-该脚本用于训练模型
-该模型使用经典的VGG结构
+该脚本用于大内存用户训练模型
+64g一下内存不要使用
 """
 from argparse import ArgumentParser
-import tensorflow as tf
 from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
 from keras.utils import multi_gpu_model
 from keras.optimizers import SGD
 from config import PATIENCE, TRAIN_SAMPLES, BATCH_SIZE, VALID_SAMPLES, EPOCH
 from utils import get_available_gpus, get_available_cpus
 from model import build_model
-from data_generator import DataGenSequence
+from data_generator import data_all
 
 
 def parse_command_params():
@@ -65,20 +66,13 @@ if __name__ == '__main__':
     args = parse_command_params()
     my_model = get_model(args['pretrained'])
 
-    sgd = SGD(lr=1e-2, momentum=0.9, nesterov=True, clipnorm=0.5)
+    sgd = SGD(lr=1e-3, momentum=0.9, nesterov=True, clipnorm=0.5)
     verbose = True if args['show'] == 'yes' else False
     callbacks = get_callbacks()
 
     my_model.compile(optimizer=sgd, loss='categorical_crossentropy')
-    my_model.fit_generator(DataGenSequence('train'),
-                           steps_per_epoch=TRAIN_SAMPLES // BATCH_SIZE,
-                           validation_data=DataGenSequence('valid'),
-                           validation_steps=VALID_SAMPLES // BATCH_SIZE,
-                           epochs=EPOCH,
-                           verbose=verbose,
-                           callbacks=callbacks,
-                           use_multiprocessing=True,
-                           )
+    x, y = data_all()
+    my_model.fit(x, y, batch_size=64, epochs=EPOCH, verbose=verbose, callbacks=callbacks, )
     my_model.save_weights('../models/my_model_weights.h5')
 
 
