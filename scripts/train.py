@@ -52,8 +52,9 @@ def get_callbacks():
     设置一些回调
     :return:
     """
-    model_checkpoint = ModelCheckpoint('../models/training_best_model.h5',
-                                       monitor='val_loss', verbose=True, save_best_only=True)
+    model_checkpoint = ModelCheckpoint('../models/training_best_weights.h5',
+                                       monitor='val_loss', verbose=True, save_best_only=True,
+                                       save_weights_only=True)
     early_stopping = EarlyStopping(monitor='val_loss', patience=PATIENCE)
     reduce_lr = ReduceLROnPlateau(monitor='lr', factor=0.1, patience=PATIENCE//4, verbose=True)
 
