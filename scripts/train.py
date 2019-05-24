@@ -113,4 +113,5 @@ def train(args_, model):
 if __name__ == '__main__':
     args = parse_command_params()
     my_model = get_model(args['pretrained'])
+    print(my_model.summary())
     train(args, my_model)
