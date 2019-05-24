@@ -36,6 +36,7 @@ def get_model(pretrained):
     """
     if get_available_gpus() > 1:
         model = build_model()
+        print(pretrained)
         if pretrained:
             my_model.load_weights(pretrained)
         else:
