@@ -7,7 +7,6 @@ from argparse import ArgumentParser
 from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
 from keras.utils import multi_gpu_model
 from keras.optimizers import SGD
-import os
 from config import PATIENCE, TRAIN_SAMPLES, VALID_SAMPLES, EPOCH
 from utils import get_available_gpus, get_available_cpus
 from model import build_model
@@ -67,7 +66,7 @@ def get_callbacks():
     设置一些回调
     :return:
     """
-    model_checkpoint = ModelCheckpoint('/kaggle/working/training_best_weights.h5',
+    model_checkpoint = ModelCheckpoint('../models/training_best_weights.h5',
                                        monitor='val_loss', verbose=True, save_best_only=True,
                                        save_weights_only=True)
     early_stopping = EarlyStopping(monitor='val_loss', patience=PATIENCE)
