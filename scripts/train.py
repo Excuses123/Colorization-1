@@ -8,7 +8,7 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
 from keras.utils import multi_gpu_model
 from keras.optimizers import SGD
 import os
-from config import PATIENCE, TRAIN_SAMPLES, BATCH_SIZE, VALID_SAMPLES, EPOCH
+from config import PATIENCE, TRAIN_SAMPLES, VALID_SAMPLES, EPOCH
 from utils import get_available_gpus, get_available_cpus
 from model import build_model
 from data_generator import DataGenSequence, get_data_all
@@ -85,7 +85,6 @@ def train(args_, model):
     :return:
     """
 
-
     optimizer = SGD(lr=1e-2, momentum=0.9, nesterov=True, clipnorm=0.5)
     model.compile(optimizer=optimizer, loss='categorical_crossentropy')
     if args_['method'] == 'all':
@@ -98,10 +97,10 @@ def train(args_, model):
                   callbacks=get_callbacks(),
                   shuffle=True)
     else:
-        model.fit_generator(DataGenSequence('train'),
-                            steps_per_epoch=TRAIN_SAMPLES // BATCH_SIZE,
-                            validation_data=DataGenSequence('valid'),
-                            validation_steps=VALID_SAMPLES // BATCH_SIZE,
+        model.fit_generator(DataGenSequence('train', int(args_['batch'])),
+                            steps_per_epoch=TRAIN_SAMPLES // int(args_['batch']),
+                            validation_data=DataGenSequence('valid', int(args_['batch'])),
+                            validation_steps=VALID_SAMPLES // int(args_['batch']),
                             epochs=EPOCH,
                             verbose=(args_['show'] == 'yes'),
                             callbacks=get_callbacks(),

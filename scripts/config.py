@@ -8,7 +8,6 @@ IMG_HEIGHT = 256  # 图片高度
 IMG_WIDTH = 256  # 图片宽度
 CHANNEL = 3  # 图片通道数
 
-BATCH_SIZE = 64  # 批量大小
 EPOCH = 200  # 训练轮数
 PATIENCE = 20  # EarlyStopping耐心
 TRAIN_SAMPLES = int(len(glob.glob('../data/images/train/*')) * 0.8)  # 训练样本数目

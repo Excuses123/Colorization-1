@@ -8,16 +8,17 @@ import glob
 from sklearn.neighbors import NearestNeighbors
 from keras.utils import Sequence
 import os
-from config import BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, NEIGHBOUR_NUM, TRAIN_SAMPLES, VALID_SAMPLES
+from config import IMG_HEIGHT, IMG_WIDTH, NEIGHBOUR_NUM, TRAIN_SAMPLES, VALID_SAMPLES
 
 
 class DataGenSequence(Sequence):
 
-    def __init__(self, dataset_type):
+    def __init__(self, dataset_type, batch_size):
         """
         初始化
         :param dataset_type:
         """
+        self.batch_size = batch_size
         self.dataset_type = dataset_type
         # 判断数据类型
         self.data_folder = '../data/images/train/'
@@ -37,7 +38,7 @@ class DataGenSequence(Sequence):
         生成器长度
         :return:
         """
-        return int(np.ceil(len(self.filenames) / float(BATCH_SIZE)))  # 向上取整
+        return int(np.ceil(len(self.filenames) / float(self.batch_size)))  # 向上取整
 
     def __getitem__(self, idx):
         """
@@ -45,9 +46,9 @@ class DataGenSequence(Sequence):
         :param idx: 第几批
         :return:
         """
-        i = idx * BATCH_SIZE
+        i = idx * self.batch_size
         out_img_height, out_img_width = IMG_HEIGHT // 4, IMG_WIDTH // 4
-        batch_size = min(BATCH_SIZE, (len(self.filenames) - i))  # 不足需要取出剩下的
+        batch_size = min(self.batch_size, (len(self.filenames) - i))  # 不足需要取出剩下的
         batch_x = np.empty((batch_size, IMG_HEIGHT, IMG_WIDTH, 1), dtype=np.float32)
         batch_y = np.empty((batch_size, out_img_height, out_img_width, self.number_q), dtype=np.float32)
 
