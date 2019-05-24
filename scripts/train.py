@@ -24,7 +24,7 @@ def parse_command_params():
     ap.add_argument('-s', '--show', default='no', help="if you want to visualize training process")
     ap.add_argument('-m', '--method', default='all', help='fit all or fit generator')
     ap.add_argument('-b', '--batch', default=64, help='batch size of training')
-    ap.add_argument('e', 'epochs', default=100, help='how many epochs to train')
+    ap.add_argument('-e', '--epochs', default=100, help='how many epochs to train')
     args_ = vars(ap.parse_args())
     return args_
 
