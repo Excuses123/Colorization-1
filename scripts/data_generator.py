@@ -7,6 +7,7 @@ import cv2
 import glob
 from sklearn.neighbors import NearestNeighbors
 from keras.utils import Sequence
+import os
 from config import BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, NEIGHBOUR_NUM, TRAIN_SAMPLES, VALID_SAMPLES
 
 
@@ -107,43 +108,56 @@ def image_ab_to_y(img_ab, neighbour_model, number_q):
     return y
 
 
-def data_all():
+def get_data_all():
     """
     不使用生成器，一次全部读入内存
     :return:
     """
-    # 加载量化的ab值
-    q_ab = np.load("../data/params/pts_in_hull.npy")
-    number_q = q_ab.shape[0]
-    # 训练近邻算法，论文使用5个邻居
-    neighbour_model = NearestNeighbors(n_neighbors=NEIGHBOUR_NUM, algorithm='ball_tree').fit(q_ab)
+    def generate():
+        """
+        没有读取过，则读取并生成npy文件
+        :return:
+        """
+        # 加载量化的ab值
+        q_ab = np.load("../data/params/pts_in_hull.npy")
+        number_q = q_ab.shape[0]
+        # 训练近邻算法，论文使用5个邻居
+        neighbour_model = NearestNeighbors(n_neighbors=NEIGHBOUR_NUM, algorithm='ball_tree').fit(q_ab)
 
-    data_folder = '../data/images/train/'
-    filenames = glob.glob(data_folder + '*')
-    out_img_height, out_img_width = IMG_HEIGHT // 4, IMG_WIDTH // 4
-    batch_size = len(filenames)  # 不足需要取出剩下的
-    batch_x = []
-    batch_y = []
-    # batch_x = np.empty((batch_size, IMG_HEIGHT, IMG_WIDTH, 1), dtype=np.float32)
-    # batch_y = np.empty((batch_size, out_img_height, out_img_width, number_q), dtype=np.float32)
+        data_folder = '../data/images/train/'
+        filenames = glob.glob(data_folder + '*')
+        out_img_height, out_img_width = IMG_HEIGHT // 4, IMG_WIDTH // 4
+        batch_size = len(filenames)
+        batch_x = []
+        batch_y = []
 
-    for i_batch in range(batch_size):
-        filename = filenames[i_batch]
-        bgr_img = cv2.resize(cv2.imread(filename), (IMG_HEIGHT, IMG_WIDTH), cv2.INTER_CUBIC)  # bgr (0-255]
-        gray_img = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2GRAY)
-        lab_img = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2LAB)
+        for i_batch in range(batch_size):
+            filename = filenames[i_batch]
+            bgr_img = cv2.resize(cv2.imread(filename), (IMG_HEIGHT, IMG_WIDTH), cv2.INTER_CUBIC)  # bgr (0-255]
+            gray_img = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2GRAY)
+            lab_img = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2LAB)
 
-        x = gray_img / 255.  # 输入标准化
-        out_lab = cv2.resize(lab_img, (out_img_height, out_img_width), cv2.INTER_CUBIC)
-        # 居中图像值 a in [42, 226], b in [20, 223] ---> a in[-86, 98], b in [-108, 95]
-        out_ab = out_lab[:, :, 1:].astype(np.int32) - 128  # 丢弃L通道
-        y = image_ab_to_y(out_ab, neighbour_model, number_q)
+            x = gray_img / 255.  # 输入标准化
+            out_lab = cv2.resize(lab_img, (out_img_height, out_img_width), cv2.INTER_CUBIC)
+            # 居中图像值 a in [42, 226], b in [20, 223] ---> a in[-86, 98], b in [-108, 95]
+            out_ab = out_lab[:, :, 1:].astype(np.int32) - 128  # 丢弃L通道
+            y = image_ab_to_y(out_ab, neighbour_model, number_q)
 
-        if np.random.random_sample() > 0.5:
-            # 以一定概率左右翻转矩阵
-            x = np.fliplr(x)
-            y = np.fliplr(y)
+            if np.random.random_sample() > 0.5:
+                # 以一定概率左右翻转矩阵
+                x = np.fliplr(x)
+                y = np.fliplr(y)
 
-        batch_x.append(x)
-        batch_y.append(y)
-    return np.expand_dims(np.array(batch_x).astype('float32'), axis=3), np.array(batch_y).astype('float32')
+            batch_x.append(x)
+            batch_y.append(y)
+        batch_x = np.array(batch_x).astype('float32')
+        batch_y = np.array(batch_y).astype('float32')
+        np.save('../data/images/x_all.npy', batch_x)
+        np.save('../data/images/y_all.npy', batch_y)
+        return batch_x, batch_y
+
+    if os.path.exists('../data/images/x_all.npy') and os.path.exists('../data/images/y_all.npy'):
+        x_all, y_all = np.load('../data/images/x_all.npy'), np.load('../data/images/y_all.npy')
+    else:
+        x_all, y_all = generate()
+    return x_all, y_all

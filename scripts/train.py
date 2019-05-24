@@ -4,14 +4,14 @@
 该模型使用经典的VGG结构
 """
 from argparse import ArgumentParser
-import tensorflow as tf
 from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
 from keras.utils import multi_gpu_model
 from keras.optimizers import SGD
+import os
 from config import PATIENCE, TRAIN_SAMPLES, BATCH_SIZE, VALID_SAMPLES, EPOCH
 from utils import get_available_gpus, get_available_cpus
 from model import build_model
-from data_generator import DataGenSequence
+from data_generator import DataGenSequence, get_data_all
 
 
 def parse_command_params():
@@ -22,6 +22,9 @@ def parse_command_params():
     ap = ArgumentParser()  # 创建解析器
     ap.add_argument('-p', '--pretrained', help="path of your model files expected .h5 or .hdf5")
     ap.add_argument('-s', '--show', default='no', help="if you want to visualize training process")
+    ap.add_argument('-m', '--method', default='all', help='fit all or fit generator')
+    ap.add_argument('-b', '--batch', default=64, help='batch size of training')
+    ap.add_argument('e', 'epochs', default=100, help='how many epochs to train')
     args_ = vars(ap.parse_args())
     return args_
 
@@ -56,36 +59,56 @@ def get_callbacks():
                                        monitor='val_loss', verbose=True, save_best_only=True,
                                        save_weights_only=True)
     early_stopping = EarlyStopping(monitor='val_loss', patience=PATIENCE)
-    reduce_lr = ReduceLROnPlateau(monitor='lr', factor=0.1, patience=PATIENCE//4, verbose=True)
+    reduce_lr = ReduceLROnPlateau(monitor='lr', factor=0.1, patience=PATIENCE // 4, verbose=True)
 
     callbacks_ = [model_checkpoint, early_stopping, reduce_lr]
     return callbacks_
 
 
+def train(args_, model):
+    """
+    训练
+    :param args_:
+    :return:
+    """
+    # 配置GPU环境
+    import tensorflow as tf
+    import keras.backend.tensorflow_backend as KTF
+    import os
+    # 进行配置，每个GPU使用80%上限显存
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    config = tf.ConfigProto()
+    config.gpu_options.per_process_gpu_memory_fraction = 0.8
+    session = tf.Session(config=config)
+    KTF.set_session(session)
+
+    optimizer = SGD(lr=1e-2, momentum=0.9, nesterov=True, clipnorm=0.5)
+    model.compile(optimizer=optimizer, loss='categorical_crossentropy')
+    if args_['method'] == 'all':
+        x_all, y_all = get_data_all()
+        model.fit(x_all, y_all,
+                  batch_size=int(args_['batch']),
+                  epochs=int(args_['epochs']),
+                  validation_split=0.2,
+                  verbose=(args_['show'] == 'yes'),
+                  callbacks=get_callbacks(),
+                  shuffle=True)
+    else:
+        model.fit_generator(DataGenSequence('train'),
+                            steps_per_epoch=TRAIN_SAMPLES // BATCH_SIZE,
+                            validation_data=DataGenSequence('valid'),
+                            validation_steps=VALID_SAMPLES // BATCH_SIZE,
+                            epochs=EPOCH,
+                            verbose=(args_['show'] == 'yes'),
+                            callbacks=get_callbacks(),
+                            use_multiprocessing=True,
+                            )
+    if not os.path.exists('../models'):
+        os.mkdir('../models')
+    model.save_weights('../models/my_model_weights.h5')
+
+
 if __name__ == '__main__':
     args = parse_command_params()
     my_model = get_model(args['pretrained'])
-
-    sgd = SGD(lr=1e-2, momentum=0.9, nesterov=True, clipnorm=0.5)
-    verbose = True if args['show'] == 'yes' else False
-    callbacks = get_callbacks()
-
-    my_model.compile(optimizer=sgd, loss='categorical_crossentropy')
-    my_model.fit_generator(DataGenSequence('train'),
-                           steps_per_epoch=TRAIN_SAMPLES // BATCH_SIZE,
-                           validation_data=DataGenSequence('valid'),
-                           validation_steps=VALID_SAMPLES // BATCH_SIZE,
-                           epochs=EPOCH,
-                           verbose=verbose,
-                           callbacks=callbacks,
-                           use_multiprocessing=True,
-                           )
-    my_model.save_weights('../models/my_model_weights.h5')
-
-
-
-
-
-
-
-
+    train(args, my_model)
