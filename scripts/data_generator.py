@@ -125,7 +125,7 @@ def get_data_all():
         neighbour_model = NearestNeighbors(n_neighbors=NEIGHBOUR_NUM, algorithm='ball_tree').fit(q_ab)
 
         data_folder = '../data/images/train/'
-        filenames = glob.glob(data_folder + '*')
+        filenames = glob.glob(data_folder + '*')[:1000]
         out_img_height, out_img_width = IMG_HEIGHT // 4, IMG_WIDTH // 4
         batch_size = len(filenames)
         batch_x = []

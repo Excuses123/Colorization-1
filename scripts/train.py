@@ -68,7 +68,8 @@ def get_callbacks():
 def train(args_, model):
     """
     训练
-    :param args_:
+    :param args_: 命令行参数
+    :param model: 模型
     :return:
     """
     # 配置GPU环境
