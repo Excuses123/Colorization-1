@@ -13,6 +13,17 @@ from utils import get_available_gpus, get_available_cpus
 from model import build_model
 from data_generator import DataGenSequence, get_data_all
 
+# 配置GPU环境
+import tensorflow as tf
+import keras.backend.tensorflow_backend as KTF
+import os
+# 进行配置，每个GPU使用80%上限显存
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+config = tf.ConfigProto()
+config.gpu_options.per_process_gpu_memory_fraction = 0.8
+session = tf.Session(config=config)
+KTF.set_session(session)
+
 
 def parse_command_params():
     """
@@ -73,16 +84,7 @@ def train(args_, model):
     :param model: 模型
     :return:
     """
-    # 配置GPU环境
-    import tensorflow as tf
-    import keras.backend.tensorflow_backend as KTF
-    import os
-    # 进行配置，每个GPU使用80%上限显存
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-    config = tf.ConfigProto()
-    config.gpu_options.per_process_gpu_memory_fraction = 0.8
-    session = tf.Session(config=config)
-    KTF.set_session(session)
+
 
     optimizer = SGD(lr=1e-2, momentum=0.9, nesterov=True, clipnorm=0.5)
     model.compile(optimizer=optimizer, loss='categorical_crossentropy')
