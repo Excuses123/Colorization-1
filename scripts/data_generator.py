@@ -54,7 +54,7 @@ class DataGenSequence(Sequence):
 
         for i_batch in range(batch_size):
             filename = self.filenames[i]
-            print(filename)
+
             bgr_img = cv2.resize(cv2.imread(filename), (IMG_HEIGHT, IMG_WIDTH), cv2.INTER_CUBIC)  # bgr (0-255]
             gray_img = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2GRAY)
             lab_img = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2LAB)
