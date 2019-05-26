@@ -2,7 +2,6 @@
 """
 本模块演示预训练模型效果
 """
-import os
 import glob
 import cv2
 import numpy as np
