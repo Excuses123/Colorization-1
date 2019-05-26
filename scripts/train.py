@@ -103,7 +103,6 @@ def train(args_, model):
                             epochs=EPOCH,
                             verbose=(args_['show'] == 'yes'),
                             callbacks=get_callbacks(),
-                            use_multiprocessing=True,
                             )
     if not os.path.exists('../models'):
         os.mkdir('../models')
