@@ -54,25 +54,27 @@ class DataGenSequence(Sequence):
 
         for i_batch in range(batch_size):
             filename = self.filenames[i]
-            print(filename)
-            bgr_img = cv2.resize(cv2.imread(filename), (IMG_HEIGHT, IMG_WIDTH), cv2.INTER_CUBIC)  # bgr (0-255]
-            gray_img = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2GRAY)
-            lab_img = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2LAB)
+            try:
+                bgr_img = cv2.resize(cv2.imread(filename), (IMG_HEIGHT, IMG_WIDTH), cv2.INTER_CUBIC)  # bgr (0-255]
+                gray_img = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2GRAY)
+                lab_img = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2LAB)
 
-            x = gray_img / 255.  # 输入标准化
-            out_lab = cv2.resize(lab_img, (out_img_height, out_img_width), cv2.INTER_CUBIC)
-            # 居中图像值 a in [42, 226], b in [20, 223] ---> a in[-86, 98], b in [-108, 95]
-            out_ab = out_lab[:, :, 1:].astype(np.int32) - 128  # 丢弃L通道
-            y = image_ab_to_y(out_ab, self.neighbour_model, self.number_q)
+                x = gray_img / 255.  # 输入标准化
+                out_lab = cv2.resize(lab_img, (out_img_height, out_img_width), cv2.INTER_CUBIC)
+                # 居中图像值 a in [42, 226], b in [20, 223] ---> a in[-86, 98], b in [-108, 95]
+                out_ab = out_lab[:, :, 1:].astype(np.int32) - 128  # 丢弃L通道
+                y = image_ab_to_y(out_ab, self.neighbour_model, self.number_q)
 
-            if np.random.random_sample() > 0.5:
-                # 以一定概率左右翻转矩阵
-                x = np.fliplr(x)
-                y = np.fliplr(y)
+                if np.random.random_sample() > 0.5:
+                    # 以一定概率左右翻转矩阵
+                    x = np.fliplr(x)
+                    y = np.fliplr(y)
 
-            batch_x[i_batch, :, :, 0] = x
-            batch_y[i_batch] = y
-            i += 1
+                batch_x[i_batch, :, :, 0] = x
+                batch_y[i_batch] = y
+                i += 1
+            except:
+                print(filename)
         return batch_x, batch_y
 
     def on_epoch_end(self):
