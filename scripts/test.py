@@ -62,7 +62,6 @@ def test(args):
         number_q = q_ab.shape[0]
 
         images_bgr, images_gray = get_images(args['input'])
-
         for i in range(images_bgr.shape[0]):
             x_test = np.empty((1, IMG_HEIGHT, IMG_WIDTH, 1), dtype=np.float32)
             x_test[0, :, :, 0] = images_gray[i] / 255.
