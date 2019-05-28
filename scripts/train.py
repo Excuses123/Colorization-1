@@ -11,6 +11,7 @@ from config import PATIENCE, TRAIN_SAMPLES, VALID_SAMPLES, EPOCH
 from utils import get_available_gpus, get_available_cpus
 from model import build_model
 from data_generator import DataGenSequence, get_data_all
+from loss_function import categorical_crossentropy_color
 
 # 配置GPU环境
 import tensorflow as tf
@@ -35,6 +36,7 @@ def parse_command_params():
     ap.add_argument('-m', '--method', default='all', help='fit all or fit generator')
     ap.add_argument('-b', '--batch', default=64, help='batch size of training')
     ap.add_argument('-e', '--epochs', default=100, help='how many epochs to train')
+    ap.add_argument('-l', '--loss', default='ce', help='which loss function to train')
     args_ = vars(ap.parse_args())
     return args_
 
@@ -85,7 +87,15 @@ def train(args_, model):
     """
 
     optimizer = SGD(lr=1e-2, momentum=0.9, nesterov=True, clipnorm=0.5)
-    model.compile(optimizer=optimizer, loss='categorical_crossentropy')
+
+    if args_['loss'] == 'ce':
+        model.compile(optimizer=optimizer, loss='categorical_crossentropy')
+    elif args_['loss'] == 'vce':
+        model.compile(optimizer=optimizer, loss=categorical_crossentropy_color)
+    else:
+        print("Please enter valid loss function")
+        return None
+
     if args_['method'] == 'all':
         x_all, y_all = get_data_all()
         model.fit(x_all, y_all,

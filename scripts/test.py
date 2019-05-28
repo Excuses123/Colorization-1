@@ -52,16 +52,19 @@ def test(args):
     :param args
     :return:
     """
-    if not os.path.exists('../models/training_best_weights.h5'):
+    if not os.path.exists('../models/training_best_weights_128end.h5'):
         print("no model in root/models")
     else:
         model = build_model()
-        model.load_weights('../models/training_best_weights.h5')
+        model.load_weights('../models/training_best_weights_128end.h5')
         h, w = IMG_HEIGHT // 4, IMG_WIDTH // 4
         q_ab = np.load("../data/params/pts_in_hull.npy")
         number_q = q_ab.shape[0]
 
         images_bgr, images_gray = get_images(args['input'])
+        raws = []
+        grays = []
+        preds = []
         for i in range(images_bgr.shape[0]):
             x_test = np.empty((1, IMG_HEIGHT, IMG_WIDTH, 1), dtype=np.float32)
             x_test[0, :, :, 0] = images_gray[i] / 255.
@@ -91,8 +94,21 @@ def test(args):
                 os.mkdir(args['output'])
 
             cv2.imwrite(args_['output'] + 'img{}_raw.png'.format(i), images_bgr[i])
+            raws.append(images_bgr[i])
             cv2.imwrite(args_['output'] + 'img{}_gray.png'.format(i), images_gray[i])
+            grays.append(images_gray[i])
             cv2.imwrite(args_['output'] + 'img{}_pred.png'.format(i), out_bgr)
+            preds.append(out_bgr)
+
+        import matplotlib.pyplot as plt
+        for i in range(3):
+            plt.subplot(3, 3, i+1)
+            plt.imshow(cv2.cvtColor(raws[i], cv2.COLOR_BGR2RGB))
+            plt.subplot(3, 3, i+3+1)
+            plt.imshow(grays[i], cmap='gray')
+            plt.subplot(3, 3, i+6+1)
+            plt.imshow(cv2.cvtColor(preds[i], cv2.COLOR_BGR2RGB))
+        plt.savefig('zc.png')
 
 
 if __name__ == '__main__':

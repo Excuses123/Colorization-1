@@ -69,23 +69,23 @@ def build_model():
     x = BatchNormalization(name="conv6_bn")(x)  # output (32, 32, 512)
 
     # conv7层
-    # 此处可以修改为256
-    x = Conv2D(512, (KERNEL_SIZE, KERNEL_SIZE), activation="relu", padding="same", name="conv7_1",
+    # 原论文这里是512
+    x = Conv2D(256, (KERNEL_SIZE, KERNEL_SIZE), activation="relu", padding="same", name="conv7_1",
                kernel_initializer="he_normal", kernel_regularizer=l2(1e-3))(x)
-    x = Conv2D(512, (KERNEL_SIZE, KERNEL_SIZE), activation="relu", padding="same", name="conv7_2",
+    x = Conv2D(256, (KERNEL_SIZE, KERNEL_SIZE), activation="relu", padding="same", name="conv7_2",
                kernel_initializer="he_normal", kernel_regularizer=l2(1e-3))(x)
-    x = Conv2D(512, (KERNEL_SIZE, KERNEL_SIZE), activation="relu", padding="same", name="conv7_3",
+    x = Conv2D(256, (KERNEL_SIZE, KERNEL_SIZE), activation="relu", padding="same", name="conv7_3",
                kernel_initializer="he_normal", kernel_regularizer=l2(1e-3))(x)
     x = BatchNormalization(name="conv7_bn")(x)  # output (32, 32, 512)
 
     # conv8层
-    # 此处可以修改为128
+    # 原论文这里是256，考虑到数据集较小，无需过多特征
     x = UpSampling2D(size=(2, 2))(x)  # keras里deconv为upsampling（上采样）
-    x = Conv2D(256, (KERNEL_SIZE, KERNEL_SIZE), activation="relu", padding="same", name="conv8_1",
+    x = Conv2D(128, (KERNEL_SIZE, KERNEL_SIZE), activation="relu", padding="same", name="conv8_1",
                kernel_initializer="he_normal", kernel_regularizer=l2(1e-3))(x)
-    x = Conv2D(256, (KERNEL_SIZE, KERNEL_SIZE), activation="relu", padding="same", name="conv8_2",
+    x = Conv2D(128, (KERNEL_SIZE, KERNEL_SIZE), activation="relu", padding="same", name="conv8_2",
                kernel_initializer="he_normal", kernel_regularizer=l2(1e-3))(x)
-    x = Conv2D(256, (KERNEL_SIZE, KERNEL_SIZE), activation="relu", padding="same", name="conv8_3",
+    x = Conv2D(128, (KERNEL_SIZE, KERNEL_SIZE), activation="relu", padding="same", name="conv8_3",
                kernel_initializer="he_normal", kernel_regularizer=l2(1e-3))(x)
     x = BatchNormalization()(x)  # output (64, 64, 256)
 
